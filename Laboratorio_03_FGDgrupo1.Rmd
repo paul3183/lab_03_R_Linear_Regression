@@ -1,0 +1,241 @@
+---
+title: "FGD-Grupo 1"
+author: "Christian David Huaman Escudero - PaulMartin Ruiz Guardia - Milene Natalia Aranda Huerta"
+date: "2023-10-17"
+output: html_document
+---
+
+```{r}
+df_anscombe <- data("anscombe")
+print(anscombe)
+
+#1.	Obtenga un resumen de las principales estadísticas de este dataset, utilice la función summary.
+
+summary(anscombe)
+
+#2.	Grafique los 4 pares de variable: y1 vs x1, y2 vs x2…. y4 vs x4:
+
+plot(anscombe$x1, anscombe$y1, main = "Y1 vs X1", xlab = "X1", ylab = "Y1" )
+plot(anscombe$x2, anscombe$y2, main = "Y2 vs X2", xlab = "X2", ylab = "Y2" )
+plot(anscombe$x3, anscombe$y3, main = "Y3 vs X3", xlab = "X3", ylab = "Y3" )
+plot(anscombe$x4, anscombe$y4, main = "Y4 vs X4", xlab = "X4", ylab = "Y4" )
+
+
+#3.	Calcule las correlaciones de esos 4 pares de variables
+cor(anscombe$x1, anscombe$y1)
+cor(anscombe$x2, anscombe$y2)
+cor(anscombe$x3, anscombe$y3)
+cor(anscombe$x4, anscombe$y4)
+# Obetnemos mas datos con el metodo test de cor:
+cor.test(anscombe$x1, anscombe$y1)
+cor.test(anscombe$x2, anscombe$y2)
+cor.test(anscombe$x3, anscombe$y3)
+cor.test(anscombe$x4, anscombe$y4)
+
+
+#4.	¿Qué puede concluir de la relación de los 4 pares de variables?
+
+#Se tiene una correlación positiva entre la variable x1 y y1. La gráfica coincide con el valor de la correlación.
+#En las variables x2 vs y2 no se presenta correlación, a pesar del valor calculado por el comando cor. 
+#Entre las variables x3 e y3 se presenta una correlación positiva, a pesar de la presencia del outlier.
+#Entre las variables x4 e y4 no se presenta correlación alguna.
+
+```
+
+#SEGUNDA PARTE - REGRESION:
+
+```{r}
+library(gapminder)
+data("gapminder")
+
+```
+
+#1. ¿Cuántos países y continentes se encuentran comprendidos en este dataset?.
+
+```{r}
+help("data.frame")
+df_country <- data.frame(gapminder$country)
+length(unique(gapminder$country)) #Numero de paises
+
+df_continent <- data.frame(gapminder$continent)
+length(unique(gapminder$continent)) #Numero de continentes
+
+```
+
+#2. Seleccione los datos para Perú y guárdelos en un dataset denominado df_peru, ¿qué tipo de relación podría plantear con los datos disponibles?
+
+#Para crear el df_peru tenemos dos formas:
+
+#a. Utilizando el comnado subset #df_peru \<- subset(gapminder, country == "Peru")
+
+#b. Utilizando las funciones "pipes" del paquete tidyverse #df_peru \<- filter(gapminder, country =="Peru")
+
+
+```{r}
+
+df_peru <- subset(gapminder, country == "Peru")
+ncol(df_peru) # obtenemos 6 columnas
+nrow(df_peru) #obtenemos 12 filas 
+#se puede obtener la relacion de años en un data frame de peru:
+df_years <- data.frame(df_peru$year,1:length(df_peru$year))
+df_years # creamos un dataframe [12x2] la segunda columna hace un recorrido de 1 hasta el tamaño del dataframe.
+
+#se puede obtener el diagrama de dispersion de los años vs la expectativa de vida: 
+plot(x = df_peru$year, y = df_peru$lifeExp)
+
+#se puede obtener los histogramas de lifeExpect, gdpPercap, population:
+hist(df_peru$lifeExp)
+hist(df_peru$gdpPercap)
+hist(df_peru$pop)
+
+
+```
+
+
+#3. Realice una revisión de los variables del punto 2:
+
+```{r}
+
+#Al obtener la frecuencia del histgrama de expectativa de vida  y el diagrama de #dispersion de los años vs la expectativa de vida visualizamos que estamos ante un #caso de Regresion pues conocemos las Ys que son una serie de tiempo, en este caso #años son Continuos, Entonces podemos poner la exp. de vida en funcion de los años #y hacer un modelo de regresion lineal y hacer predicciones para años que no se #obtuvieron datos.
+
+cor(df_peru$year,df_peru$lifeExp)
+hist(df_peru$lifeExp)
+plot(x = df_peru$year, y = df_peru$lifeExp)
+
+
+```
+
+
+#4. Plantee un modelo de regresión lineal con base al punto 2 y 3.
+
+```{r}
+
+# Ajustamos el modelo de regresion lineal poniendo la expectativa de vida en #funcion de los años:
+# lifeExp = funcion(year)
+
+modelo_regresion_expectativa_vida <- lm (lifeExp ~ year , data = df_peru)
+modelo_regresion_expectativa_vida
+summary(modelo_regresion_expectativa_vida)
+
+# graficamos:
+#Al graficar notamos que la funcion abline por si misma no grafica la recta para esta regresion, luego de cosnultar la #documentacion se obtiene la relacion :
+#plot(x, y)                     # Create plot without lines
+#abline(reg = lm(y ~ x))        # Add regression line
+
+plot(x = df_peru$year, y = df_peru$lifeExp, main = "Expectativa de vida vs los años", xlab = "Años", ylab = "Expectativa") + abline(modelo_regresion_expectativa_vida)
+
+
+```
+
+
+#5. ¿Es significativo el modelo?
+
+```{r}
+
+help(summary)
+#revisando la documentacion de la funcion genérica summary, tenemos la solucion a esta pregunta:
+summary(modelo_regresion_expectativa_vida)
+#El modelo que ajustamos es significativo. Se tienen como coeficientes de #regresión a -985.71866 y 0.52770. Vemos que p-valor es menor de 0.05 ó 5% y los siguientes parámetros(8.93e-11, 5.03e-11), son significativos.
+#Además podemos observar el error estándar para cada #parámetro es 35.67089 y 0.01802 respectivamente. Revisando la documentacion: El R-cuadrado es una medida estadística de qué tan cerca están los datos de la línea de regresión ajustada. También se conoce como coeficiente de determinación, o coeficiente de determinación múltiple si se trata de regresión múltiple. La R^2 es 0.9885, dicho valor nos indica un buen ajuste del modelo con tendencia a 1.
+#El modelo se rige por la siguiente ecuacion lineal:
+# lifeExp = -985.71866 + 0.52770 * year
+# como dato adicional, conultando la documentacion se obtuvo que:
+# 2e-16 es notacion científica de: 0.0000000000000002
+
+
+```
+
+
+#6. ¿Qué le indicaría el intercepto?
+
+
+```{r}
+
+# El intercepto de valor: -985.71866 matemáticamente resulta ser el valor medio de la variable "lifeExp". En este caso, resulta un valor negativo. Vemos que no es un valor realista cuando la variable "lifeExp" es igual a cero ya que no existe expectativa de vida que sea 0, sin embargo cuando year es 1952 tenemos una esperanza de vida de 44.35 vs 43.902 dato del gapminder, lo cual es un valor bastante realista.
+
+```
+
+
+#7. ¿Qué le indicaría la pendiente?
+
+```{r}
+
+# lifeExp = -985.71866 + 0.52770 * year
+# De la ecuación:
+# La pendiente 0.52770 es el efecto medio positivo sobre la variable "lifeExp" al aumentar en una unidad el valor de la variable year #Esto es, la variación que se produce en Y ="lifeExp" (0.52770) por cada #unidad de incremento en X = "year".
+
+#En conclusión para las preguntas 6 y 7 podemos decir que: 
+#Existe una relación lineal positiva entre las variables: cuando aumentamos en una unidad el año = "year", las expectativas de vida = "lifeExp" aumentan en  0.52770 unidades. De forma que por cada aumento #de la categoría del Año, la expectativa de vida #aumenta en 0.52770 unidades.
+
+```
+
+
+#8. Haga una regresión con todos los países del mundo para el 2007 y otra para los 1970, ¿Qué puede concluir con base a la comparación de estas dos regresiones?
+
+##### Se tomara como muestra un subset de gapminder para el año 2007:
+
+```{r}
+
+country_2007 <- subset(gapminder, year == 2007)
+country_2007
+plot(x = country_2007$lifeExp, y = country_2007$pop)
+
+cor.test( country_2007$lifeExp, country_2007$pop)
+#podemos observar que el coeficiente de correlacion Pearson es 0.047 < 0.05 con este resultado podemos asumir que existe una correlacion lineal entre las variables.
+
+# luego ajustaremos los datos para la regresion: 
+# poniendo gdpPercap en funcion de lifeExp: 
+# country_2007$pop = f(country_2007$lifeExp)
+mod_reg_country_2007 <- lm(country_2007$pop ~ country_2007$lifeExp, data = country_2007)
+mod_reg_country_2007
+summary(mod_reg_country_2007)
+## graficamos recta de estimación de la regresión:
+plot( x = country_2007$lifeExp, y = country_2007$pop, main=  "Población vs Espectativa de vida", xlab = "Expectativa de vida", ylab = "Población") + abline(reg = lm(country_2007$pop ~ country_2007$lifeExp))
+
+
+```
+
+
+#haremos el mismo procedimiento para el año escogido 1972:
+
+```{r}
+
+country_1972 <- subset(gapminder, year == 1972)
+plot(x = country_1972$lifeExp, y =  country_1972$pop)
+
+cor.test( country_1972$lifeExp, country_1972$pop )
+#podemos observar que el coeficiente de correlacion Pearson es 
+#0.0469 < 0.05 con este resultado podemos asumir que existe una correlacion lineal entre las variables.
+
+# luego ajustaremos los datos para la regresion: 
+# poniendo gdpPercap en funcion de lifeExp: 
+# country_1972$pop = f(country_1972$lifeExp)
+mod_reg_country_1972 <- lm(country_1972$pop ~ country_1972$lifeExp, data = country_1972)
+mod_reg_country_1972
+summary(mod_reg_country_1972)
+
+## graficamos recta de estimación de la regresión:
+plot( x = country_1972$lifeExp, y = country_1972$pop, main = "Poblacion vs Expectativa de vida", xlab = "Expectativa de Vida", ylab = "Población") + abline(reg = lm(country_1972$pop ~ country_1972$lifeExp))
+
+```
+
+
+#### Conclusiones para regresion del año 2007:
+
+#La formula para esta regresion esta dada por: #country_2007$pop = 5059756 + 581450*country_2007$lifeExp. Existe una relación lineal positiva entre las variables: cuando aumentamos en una unidad la expectativa de vida, la poblacion aumenta en 581450 unidades.
+
+#### Conclusiones para regresion del año 1972:
+
+#La formula para esta regresion esta dada por: country_1972$pop = 4109543 + 365679*country_1972$lifeExp Existe una relación lineal positiva entre las variables: cuando aumentamos en una unidad la expectativa de vida, la poblacion aumenta en 365679 unidades.
+
+###¿Qué puede concluir con base a la comparación de estas dos regresiones? 
+
+#Podemos concluir que en los años 2007 y 1972, mientras la expectativa de vida aumenta, se ve reflejado en un aumento en la poblacion, ademas #los valores del coeficiente de correlación lineal de Pearson son similares 0.047 y 0.0469, ambos ligeramente menores a 0.05 = 5%, las #graficas tienen una similitud casi de un 95%, en ambos caso los valores medios de la poblacion se hallan asignando country_1972$lifeExp = 0 y country_2007$lifeExp = 0 respectivamente. Por otro lado las rectas no poseen una pendiente pronunciada.
+
+
+###A pesar de la presencia de los outliers, la relación lineal entre las variables "expectativa de vida" y "población" se mantienen vigentes. De forma resumida podemos concluir que a medida que la expectativa de vida aumenta, el total de la poblacion en un pais se incrementa. 
+
+
+
+
+
